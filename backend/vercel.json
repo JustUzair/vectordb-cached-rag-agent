@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "buildCommand": "yarn build",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/dist/index.js"
+    }
+  ]
+}
