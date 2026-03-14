@@ -20,6 +20,9 @@ const EnvSchema = z.object({
     .string()
     .min(1, "MongoDB collection name is required"),
   MONGODB_INDEX_NAME: z.string().min(1, "MongoDB index name is required"),
+  MONGODB_KB_CACHE_COLLECTION: z
+    .string()
+    .min(1, "MongoDB KB cache collection is required"),
 });
 
 const parsed = EnvSchema.safeParse(process.env);
