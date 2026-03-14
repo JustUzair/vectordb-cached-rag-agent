@@ -25,7 +25,10 @@ export async function getKbCollection(): Promise<MongoDBCollection> {
 export async function getKbCacheCollection(): Promise<MongoDBCollection> {
   if (!cachePromise) {
     cachePromise = (async () => {
-      const collection = db.collection(env.MONGODB_KB_CACHE_COLLECTION, {});
+      const collection = db.collection(
+        env.MONGODB_KB_CACHE_COLLECTION_NAME,
+        {},
+      );
       await collection.createIndex(
         {
           key: 1,

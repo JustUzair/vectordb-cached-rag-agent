@@ -1,6 +1,5 @@
 import { Db, MongoClient, ServerApiVersion } from "mongodb";
-import { env } from "./env";
-import { is } from "zod/v4/locales";
+import { env } from "./env.js";
 
 const URI = env.MONGODB_ATLAS_URI;
 const DB_NAME = env.MONGODB_NAME;

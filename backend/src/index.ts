@@ -6,7 +6,7 @@ import {
   connectDb,
   mongoClient,
   closeDbConnection,
-} from "./utils/mongo-client";
+} from "./utils/mongo-client.js";
 
 const DEBUG: boolean = !(process.env.NODE_ENV !== "production") ? true : false;
 const limiter = rateLimit({
