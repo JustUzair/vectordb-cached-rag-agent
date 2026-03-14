@@ -1,9 +1,10 @@
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { Db, MongoClient, ServerApiVersion } from "mongodb";
 import { env } from "./env";
 import { is } from "zod/v4/locales";
 
 const URI = env.MONGODB_ATLAS_URI;
-const DB = env.MONGODB_NAME;
+const DB_NAME = env.MONGODB_NAME;
+let db: Db | null;
 let isConnected: boolean = false;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -21,12 +22,19 @@ export async function connectDb() {
     // Connect the mongoClient to the server	(optional starting in v4.7)
     await mongoClient.connect();
     isConnected = true;
+    db = mongoClient.db(DB_NAME);
     // Send a ping to confirm a successful connection
-    await mongoClient.db(DB).command({ ping: 1 });
+    await db.command({ ping: 1 });
     console.log("You successfully connected to MongoDB!");
   } catch (e) {
     console.error((e as Error).message ?? "Error connecting to mongodb");
   }
+}
+
+export function getDb() {
+  if (db) return db;
+  db = mongoClient.db(DB_NAME);
+  return db;
 }
 
 export async function closeDbConnection(mongoClient: MongoClient) {
