@@ -31,7 +31,7 @@ export async function connectDb() {
   }
 }
 
-export function getDb() {
+export function getDb(): Db {
   if (db) return db;
   db = mongoClient.db(DB_NAME);
   return db;

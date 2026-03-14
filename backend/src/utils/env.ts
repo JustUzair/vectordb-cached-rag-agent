@@ -16,6 +16,10 @@ const EnvSchema = z.object({
   RAG_MODEL_PROVIDER: z.enum(["gemini", "openai"]).default("gemini"),
   MONGODB_ATLAS_URI: z.url().min(1, "MongoDB URI is required"),
   MONGODB_NAME: z.string().min(1, "MongoDB name is required"),
+  MONGODB_COLLECTION_NAME: z
+    .string()
+    .min(1, "MongoDB collection name is required"),
+  MONGODB_INDEX_NAME: z.string().min(1, "MongoDB index name is required"),
 });
 
 const parsed = EnvSchema.safeParse(process.env);
