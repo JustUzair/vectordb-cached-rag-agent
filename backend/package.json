@@ -9,7 +9,7 @@
     "build": "tsup src/index.ts --format esm --clean --minify",
     "vercel-build": "yarn build",
     "start": "npm run build && node dist/index.js",
-    "test": "vitest"
+    "test": "NODE_ENV=test && vitest"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

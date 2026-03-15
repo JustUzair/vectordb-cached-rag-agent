@@ -10,7 +10,7 @@ import app from "../index.js";
 
 const API = "/api/v1";
 
-// ── Minimal in-memory test fixtures ──────────────────────────────────────────
+// ── Test fixtures ─────────────────────────────────────────────────────────────
 const TXT_CONTENT = Buffer.from(
   "LightRAG is a graph-based RAG framework that uses entity extraction " +
     "and knowledge graphs to retrieve and synthesize information from documents.",
@@ -47,25 +47,25 @@ describe("PDF RAG Agent — API Tests", () => {
   // ── 2. UNKNOWN ROUTE ────────────────────────────────────────────────────────
   describe("Unknown Routes", () => {
     it("should return an error for an unregistered route", async () => {
-      const res = await request(app).get("/api/v1/does-not-exist");
+      const res = await request(app).get(`${API}/does-not-exist`);
       expect(res.status).toBeGreaterThanOrEqual(400);
     });
   });
 
-  // ── 3. FILE UPLOAD — VALIDATION ─────────────────────────────────────────────
+  // ── 3. UPLOAD — VALIDATION ───────────────────────────────────────────────────
   describe("POST /api/v1/kb/upload — validation", () => {
     it("should return 400 when no file is attached", async () => {
       const res = await request(app)
         .post(`${API}/kb/upload`)
-        .set("Content-Type", "multipart/form-data");
-      // multer returns 400 via the error handler wrapper
+        .field("namespace", "test");
       expect(res.status).toBeGreaterThanOrEqual(400);
     });
 
-    it("should reject unsupported file types (e.g. .jpg)", async () => {
+    it("should reject unsupported file types (.jpg)", async () => {
       const res = await request(app)
         .post(`${API}/kb/upload`)
-        .attach("file", Buffer.from("fake image"), {
+        .field("namespace", "test")
+        .attach("file", Buffer.from("fake image data"), {
           filename: "photo.jpg",
           contentType: "image/jpeg",
         });
@@ -73,120 +73,162 @@ describe("PDF RAG Agent — API Tests", () => {
     });
 
     it("should reject files exceeding 10MB", async () => {
-      const oversized = Buffer.alloc(11 * 1024 * 1024, "a"); // 11MB
+      const oversized = Buffer.alloc(11 * 1024 * 1024, "a");
       const res = await request(app)
         .post(`${API}/kb/upload`)
+        .field("namespace", "test")
         .attach("file", oversized, {
           filename: "big.txt",
           contentType: "text/plain",
         });
       expect(res.status).toBeGreaterThanOrEqual(400);
     });
-  });
 
-  // ── 4. FILE UPLOAD — TXT ────────────────────────────────────────────────────
-  describe("POST /api/v1/kb/upload — .txt ingestion", () => {
-    it("should ingest a .txt file and return ok + chunk metadata", async () => {
+    it("should default namespace to 'default' when not provided", async () => {
       const res = await request(app)
         .post(`${API}/kb/upload`)
         .attach("file", TXT_CONTENT, {
-          filename: "lightrag-test.txt",
+          filename: "no-namespace.txt",
           contentType: "text/plain",
         });
-
-      expect(res.status).toBe(200);
-      expect(res.body.ok).toBe(true);
-      expect(res.body).toHaveProperty("namespace");
-      expect(res.body).toHaveProperty("totalChunks");
-      expect(res.body.totalChunks).toBeGreaterThan(0);
-      expect(Array.isArray(res.body.sources)).toBe(true);
-      expect(res.body.sources).toContain("lightrag-test.txt");
-    });
-
-    it("should return cache hit on re-uploading the same .txt file", async () => {
-      const res = await request(app)
-        .post(`${API}/kb/upload`)
-        .attach("file", TXT_CONTENT, {
-          filename: "lightrag-test.txt",
-          contentType: "text/plain",
-        });
-
-      expect(res.status).toBe(200);
-      expect(res.body.ok).toBe(true);
-      expect(res.body.message).toMatch(/already ingested|cache hit/i);
-    });
-  });
-
-  // ── 5. FILE UPLOAD — MARKDOWN ───────────────────────────────────────────────
-  describe("POST /api/v1/kb/upload — .md ingestion", () => {
-    it("should ingest a .md file successfully", async () => {
-      const res = await request(app)
-        .post(`${API}/kb/upload`)
-        .attach("file", MD_CONTENT, {
-          filename: "mongo-test.md",
-          contentType: "text/markdown",
-        });
-
-      expect(res.status).toBe(200);
-      expect(res.body.ok).toBe(true);
-      expect(res.body.totalChunks).toBeGreaterThan(0);
-      expect(res.body.sources).toContain("mongo-test.md");
-    });
-
-    it("should detect duplicate .md and return cache hit", async () => {
-      const res = await request(app)
-        .post(`${API}/kb/upload`)
-        .attach("file", MD_CONTENT, {
-          filename: "mongo-test.md",
-          contentType: "text/markdown",
-        });
-
-      expect(res.status).toBe(200);
-      expect(res.body.ok).toBe(true);
-      expect(res.body.message).toMatch(/already ingested|cache hit/i);
-    });
-  });
-
-  // ── 6. FILE UPLOAD — EMPTY FILE ─────────────────────────────────────────────
-  describe("POST /api/v1/kb/upload — edge cases", () => {
-    it("should return 400 for an empty .txt file", async () => {
-      const res = await request(app)
-        .post(`${API}/kb/upload`)
-        .attach("file", Buffer.from(""), {
-          filename: "empty.txt",
-          contentType: "text/plain",
-        });
-
-      // Empty content → no chunks → controller returns 400
-      expect(res.status).toBeGreaterThanOrEqual(400);
-    });
-
-    it("should handle a different namespace per upload cycle", async () => {
-      // Since namespace is hardcoded to 'default' in the controller,
-      // verify the response always reflects 'default'
-      const res = await request(app)
-        .post(`${API}/kb/upload`)
-        .attach("file", Buffer.from("Namespace test content for RAG agent."), {
-          filename: "namespace-check.txt",
-          contentType: "text/plain",
-        });
-
+      // Zod schema default kicks in
       expect(res.status).toBe(200);
       expect(res.body.namespace).toBe("default");
     });
   });
 
-  // ── 7. INGEST ROUTE (stub) ───────────────────────────────────────────────────
-  describe("POST /api/v1/kb/ingest — stub", () => {
-    it("should hit the /ingest route without crashing (stub endpoint)", async () => {
-      // ingest handler is currently empty — verify it at least responds
+  // ── 4. UPLOAD — TXT with namespace + source ──────────────────────────────────
+  describe("POST /api/v1/kb/upload — .txt with form fields", () => {
+    it("should ingest a .txt file with namespace and source prefix", async () => {
       const res = await request(app)
-        .post(`${API}/kb/ingest`)
-        .send({ text: "stub test", source: "test" });
+        .post(`${API}/kb/upload`)
+        .field("namespace", "research")
+        .field("source", "lightrag-docs")
+        .attach("file", TXT_CONTENT, {
+          filename: "lightrag-test.txt",
+          contentType: "text/plain",
+        });
 
-      // Empty handler sends no response — supertest will get a socket hang
-      // or a 200 with no body. Either way the route must not throw a 500.
+      expect(res.status).toBe(200);
+      expect(res.body.ok).toBe(true);
+      expect(res.body.namespace).toBe("research");
+      expect(res.body.totalChunks).toBeGreaterThan(0);
+      expect(Array.isArray(res.body.sources)).toBe(true);
+      // controller prefixes: "lightrag-docs-lightrag-test.txt"
+      expect(res.body.sources[0]).toContain("lightrag-docs");
+      expect(res.body.sources[0]).toContain("lightrag-test.txt");
+    });
+
+    it("should return cache hit on re-uploading same file to same namespace", async () => {
+      const res = await request(app)
+        .post(`${API}/kb/upload`)
+        .field("namespace", "research")
+        .field("source", "lightrag-docs")
+        .attach("file", TXT_CONTENT, {
+          filename: "lightrag-test.txt",
+          contentType: "text/plain",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.ok).toBe(true);
+      expect(res.body.message).toMatch(/already ingested|cache hit/i);
+    });
+
+    it("should use originalName as-is when source field is omitted", async () => {
+      const res = await request(app)
+        .post(`${API}/kb/upload`)
+        .field("namespace", "default")
+        .attach("file", Buffer.from("No source label test content for RAG."), {
+          filename: "no-source.txt",
+          contentType: "text/plain",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.ok).toBe(true);
+      // source is "" (Zod default) → prefix branch skipped → raw filename
+      expect(res.body.sources[0]).toBe("no-source.txt");
+    });
+  });
+
+  // ── 5. UPLOAD — MARKDOWN ─────────────────────────────────────────────────────
+  describe("POST /api/v1/kb/upload — .md ingestion", () => {
+    it("should ingest a .md file with namespace and source", async () => {
+      const res = await request(app)
+        .post(`${API}/kb/upload`)
+        .field("namespace", "docs")
+        .field("source", "mongo-ref")
+        .attach("file", MD_CONTENT, {
+          filename: "mongo-test.md",
+          contentType: "text/markdown",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.ok).toBe(true);
+      expect(res.body.namespace).toBe("docs");
+      expect(res.body.totalChunks).toBeGreaterThan(0);
+      expect(res.body.sources[0]).toContain("mongo-ref");
+      expect(res.body.sources[0]).toContain("mongo-test.md");
+    });
+
+    it("should detect duplicate .md under same namespace + source", async () => {
+      const res = await request(app)
+        .post(`${API}/kb/upload`)
+        .field("namespace", "docs")
+        .field("source", "mongo-ref")
+        .attach("file", MD_CONTENT, {
+          filename: "mongo-test.md",
+          contentType: "text/markdown",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.ok).toBe(true);
+      expect(res.body.message).toMatch(/already ingested|cache hit/i);
+    });
+  });
+
+  // ── 6. UPLOAD — EDGE CASES ───────────────────────────────────────────────────
+  describe("POST /api/v1/kb/upload — edge cases", () => {
+    it("should return 400 for an empty .txt file", async () => {
+      const res = await request(app)
+        .post(`${API}/kb/upload`)
+        .field("namespace", "default")
+        .attach("file", Buffer.from(""), {
+          filename: "empty.txt",
+          contentType: "text/plain",
+        });
+      // Empty content → no chunks → controller returns 400
+      expect(res.status).toBeGreaterThanOrEqual(400);
+    });
+
+    it("should not 500 when source is whitespace only", async () => {
+      const res = await request(app)
+        .post(`${API}/kb/upload`)
+        .field("namespace", "default")
+        .field("source", "   ")
+        .attach("file", Buffer.from("Whitespace source edge case content."), {
+          filename: "ws-source.txt",
+          contentType: "text/plain",
+        });
       expect(res.status).not.toBe(500);
+    });
+  });
+
+  // ── 7. NAMESPACES ─────────────────────────────────────────────────────────────
+  describe("GET /api/v1/kb/namespaces", () => {
+    it("should return ok with an array of namespaces", async () => {
+      const res = await request(app).get(`${API}/kb/namespaces`);
+      expect(res.status).toBe(200);
+      expect(res.body.ok).toBe(true);
+      expect(Array.isArray(res.body.namespaces)).toBe(true);
+    });
+
+    it("should include namespaces created during upload tests", async () => {
+      const res = await request(app).get(`${API}/kb/namespaces`);
+      expect(res.status).toBe(200);
+      // Namespaces seeded by tests above
+      expect(res.body.namespaces).toContain("research");
+      expect(res.body.namespaces).toContain("personal");
+      expect(res.body.namespaces).toContain("docs");
     });
   });
 });
