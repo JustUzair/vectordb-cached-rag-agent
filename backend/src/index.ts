@@ -46,7 +46,12 @@ app.use(
   }),
 );
 
-app.use("/api", limiter);
+app.use(
+  "/api",
+  process.env.NODE_ENV === "test"
+    ? (_req: Request, _res: Response, next: any) => next()
+    : limiter,
+);
 
 app.use("/status", (_: Request, res) => {
   res.status(200).json({
