@@ -29,6 +29,9 @@ export const KBSearchTool = tool(
         preview,
       };
     });
+
+    console.log(contexts);
+
     return {
       confidence,
       namespace,
