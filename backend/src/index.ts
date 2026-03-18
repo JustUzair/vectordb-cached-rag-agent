@@ -8,6 +8,8 @@ import {
   closeDbConnection,
 } from "./utils/mongo-client.js";
 import KBRouter from "./routes/kb.js";
+import AgentRouter from "./routes/agent.js";
+
 const DEBUG: boolean = !(process.env.NODE_ENV !== "production") ? true : false;
 const limiter = rateLimit({
   limit: 10,
@@ -69,6 +71,7 @@ app.use(
 );
 
 app.use("/api/v1/kb", KBRouter);
+app.use("/api/v1/agent", AgentRouter);
 
 // Handling the unhandled routes
 app.all("*", (req, res, next) => {
