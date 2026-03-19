@@ -19,12 +19,18 @@ export type ChatRole = "user" | "assistant";
 
 export interface ChatMessage {
   role: ChatRole;
-  content: String;
+  content: string;
   ts?: Date;
+  namespace?: string;
 }
 export interface ConversationDoc {
   threadId: string;
-  messages: ChatMessage[];
+  messages: {
+    role: ChatRole;
+    content: string;
+    ts?: Date;
+    namespace?: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
