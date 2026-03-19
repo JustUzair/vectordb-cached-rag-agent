@@ -100,3 +100,47 @@ export async function appendToHistory(
     },
   );
 }
+
+export async function getPaginatedHistory(
+  threadId: string,
+  skip: number,
+  limit: number,
+): Promise<{ messages: ChatMessage[]; total: number }> {
+  const collection = await getConversationsCollection();
+  const doc = await collection.findOne(
+    { threadId },
+    {
+      projection: {
+        // $slice with negative start = from the end
+        // [-skip - limit, limit] = go back (skip+limit) from end, take limit
+        messages: { $slice: [-(skip + limit), limit] },
+        _count: { $size: "$messages" }, // won't work inline — see note below
+      },
+    },
+  );
+
+  if (!doc) return { messages: [], total: 0 };
+
+  // Get total separately (MongoDB can't mix $slice + $size in same projection)
+  const totalDoc = await collection.findOne(
+    { threadId },
+    {
+      projection: {
+        total: { $size: "$messages" },
+        _id: 0,
+      },
+    },
+  );
+
+  const total = (totalDoc as any)?.total ?? 0;
+
+  return {
+    messages: (doc.messages ?? []).map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      ts: msg.ts,
+      namespace: msg.namespace,
+    })),
+    total,
+  };
+}
