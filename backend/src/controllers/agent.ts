@@ -4,8 +4,9 @@ import { runProductAgent } from "../agent/03_agent.js";
 export default {
   chat: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { message } = req.body as {
+      const { message, namespace } = req.body as {
         message?: string;
+        namespace?: string;
       };
 
       if (!message || !message.trim()) {
@@ -18,6 +19,7 @@ export default {
       const userMsg = {
         content: message.trim(),
         role: "user" as const,
+        namespace: namespace || "default",
       };
 
       const { answer, citations } = await runProductAgent([userMsg]);

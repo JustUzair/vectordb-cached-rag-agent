@@ -7,6 +7,9 @@ export const AgentResponseSchema = z.object({
       source: z.string(),
       chunkId: z.number(),
       preview: z.string(),
+      readablePreview: z.string(),
     }),
   ),
 });
+
+export type AgentResponse = z.infer<typeof AgentResponseSchema>;

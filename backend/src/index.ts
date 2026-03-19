@@ -19,7 +19,7 @@ const limiter = rateLimit({
     res.status(429).json({
       status: "fail",
       message: "Too many requests from this IP, please try again later.",
-      retryAfter: new Date(Date.now() + 60 * 60 * 1000).toLocaleString(
+      retryAfter: new Date(Date.now() + 10 * 60 * 1000).toLocaleString(
         "en-IN",
         {
           timeZone: "IST",
@@ -50,7 +50,7 @@ app.use(
 
 app.use(
   "/api",
-  process.env.NODE_ENV === "test"
+  process.env.NODE_ENV === "test" || process.env.NODE_ENV !== "production"
     ? (_req: Request, _res: Response, next: any) => next()
     : limiter,
 );

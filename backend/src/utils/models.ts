@@ -33,7 +33,7 @@ export function makeModel(opts: ModelOptions = {}): BaseChatModel {
       return new ChatGroq({
         apiKey: env.GROQ_API_KEY!,
         model: env.GROQ_MODEL!,
-        temperature,
+        temperature: 0.6,
         maxTokens: opts.maxTokens,
       });
   }
