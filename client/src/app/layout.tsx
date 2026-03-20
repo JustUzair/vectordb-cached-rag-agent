@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     description:
       "Fragment your knowledge. Retrieve with precision. Answers with citations.",
     images: [
-      { url: "/og-image.png", width: 1200, height: 630, alt: "Tessera" },
+      { url: "/og-image.png", width: 1728, height: 1002, alt: "Tessera" },
     ],
   },
   twitter: {
