@@ -20,7 +20,7 @@ const syne = Syne({
 });
 
 // ── Update these once you have a real domain ──────────────
-const SITE_URL = "https://tessera.yourdomain.com";
+const SITE_URL = "https://tessera-rag-ai.vercel.app/";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
