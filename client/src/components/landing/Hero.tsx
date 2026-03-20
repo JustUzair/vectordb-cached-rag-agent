@@ -36,22 +36,22 @@ export default function SplineScene() {
         {/* Edge fades — dark mode only, fading from black (iframe bg) */}
         <div
           className="absolute inset-x-0 top-0 h-16 pointer-events-none z-10
-                        hidden dark:block
+                        hidden
                         bg-gradient-to-b from-[#070711] to-transparent"
         />
         <div
           className="absolute inset-x-0 bottom-0 h-20 pointer-events-none z-10
-                        hidden dark:block
+                        hidden
                         bg-gradient-to-t from-[#070711] to-transparent"
         />
         <div
           className="absolute inset-y-0 left-0 w-12 pointer-events-none z-10
-                        hidden dark:block
+                        hidden
                         bg-gradient-to-r from-[#070711] to-transparent"
         />
         <div
           className="absolute inset-y-0 right-0 w-12 pointer-events-none z-10
-                        hidden dark:block
+                        hidden
                         bg-gradient-to-l from-[#070711] to-transparent"
         />
       </div>
