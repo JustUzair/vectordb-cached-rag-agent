@@ -1,0 +1,78 @@
+# Backend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tessera-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: tessera-backend
+          image: 0xjustuzair/tessera-backend:latest
+          ports:
+            - containerPort: 8000
+          envFrom: # load ALL keys from a ConfigMap or Secret
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe: # k8s checks this before sending traffic
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+# Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tessera-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: tessera-frontend
+          image: 0xjustuzair/tessera-frontend:latest
+          ports:
+            - containerPort: 3000
+          envFrom: # load ALL keys from a ConfigMap or Secret
+            - configMapRef:
+                name: frontend-config
+            - secretRef:
+                name: frontend-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          readinessProbe: # k8s checks this before sending traffic
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10

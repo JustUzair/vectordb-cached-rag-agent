@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: 0xjustuzair/tessera-backend:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - ALLOWED_ORIGIN=http://localhost:3000
+    restart: unless-stopped
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:8000
+    image: 0xjustuzair/tessera-frontend:latest
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./client/.env
+    depends_on:
+      - backend
+    restart: unless-stopped

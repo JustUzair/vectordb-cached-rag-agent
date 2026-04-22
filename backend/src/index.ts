@@ -31,6 +31,13 @@ const limiter = rateLimit({
 
 const app = express();
 
+app.get("readxz", (req: Request, res: Response) =>
+  res.status(200).send(" ready"),
+);
+app.get("/healthz", (req: Request, res: Response) =>
+  res.status(200).send("ok"),
+);
+
 app.get("/", (_: Request, res: Response) => {
   res.redirect("/status");
 });
@@ -79,7 +86,10 @@ app.all("*", (req, res, next) => {
 });
 
 async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
+  if (
+    process.env.NODE_ENV !== "production" ||
+    process.env.IS_DOCKER === "true"
+  ) {
     const port = process.env.PORT || 8000;
     await connectDb();
     const server = app.listen(port, () => {
